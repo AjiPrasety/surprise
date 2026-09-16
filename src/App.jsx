@@ -432,11 +432,10 @@ export default function App() {
   const [paws, setPaws] = useState([]);
   const [message, setMessage] = useState('✨ Klik kucing atau bunganya di samping ya!');
   const [quote] = useState(() => QUOTES[Math.floor(Math.random() * QUOTES.length)]);
-  const [isPlayingMusic, setIsPlayingMusic] = useState(false);
   const [catAction, setCatAction] = useState(false);
   const [flowerBloom, setFlowerBloom] = useState(false);
 
-  const { iframeContainerRef, play: ytPlay, pause: ytPause, ready: ytReady } = useYouTubePlayer();
+  const { iframeContainerRef, play: ytPlay, pause: ytPause } = useYouTubePlayer();
   const meowRef  = useRef(null);
   const chimeRef = useRef(null);
   const popRef   = useRef(null);
@@ -456,37 +455,21 @@ export default function App() {
     setPaws((prev) => [...prev.slice(-14), { id: Date.now(), x: e.clientX, y: e.clientY, icon }]);
   }, []);
 
-  /* music */
-  const toggleMusic = () => {
-    if (!ytReady) return;
-    if (isPlayingMusic) {
-      ytPause();
-      setIsPlayingMusic(false);
-    } else {
-      ytPlay();
-      setIsPlayingMusic(true);
-    }
-  };
-
   const playPop = () => {
     if (popRef.current) { popRef.current.currentTime = 0; popRef.current.play().catch(() => {}); }
   };
 
-  /* stage transitions */
-  const handleOpenEnvelope = () => { playPop(); setStage('main'); };
+  /* stage transitions — musik mulai otomatis saat klik pertama (lolos autoplay policy browser) */
+  const handleOpenEnvelope = () => { playPop(); ytPlay(); setStage('main'); };
 
   const handleOpenSurprise = () => {
     playPop();
     setStage('surprise');
-    // Coba autoplay musik saat buka kejutan
-    ytPlay();
-    setIsPlayingMusic(true);
   };
 
   const handleReset = () => {
     setStage('envelope');
     ytPause();
-    setIsPlayingMusic(false);
   };
 
   /* cat & flower interactions */
@@ -549,36 +532,6 @@ export default function App() {
           colors={['#f472b6', '#c084fc', '#fb7185', '#a78bfa', '#fbbf24', '#34d399']}
         />
       )}
-
-      {/* ── Music button ── */}
-      <div className="fixed top-4 right-4 z-50">
-        <button
-          onClick={toggleMusic}
-          disabled={!ytReady}
-          className="glass-card border border-pink-200 text-pink-600 text-xs font-extrabold
-                     px-4 py-2.5 rounded-full shadow-lg
-                     flex items-center gap-2
-                     hover:bg-white hover:-translate-y-0.5
-                     active:scale-95 transition-all duration-200 cursor-pointer
-                     disabled:opacity-50 disabled:cursor-wait"
-        >
-          <span className={isPlayingMusic ? 'animate-bounce-soft inline-block' : ''}>
-            {isPlayingMusic ? '🔊' : '🎵'}
-          </span>
-          <span>
-            {!ytReady
-              ? 'Memuat...'
-              : isPlayingMusic
-                ? 'Matikan Musik'
-                : 'Putar Musik'}
-          </span>
-        </button>
-        {isPlayingMusic && (
-          <p className="text-center text-[10px] text-pink-400 mt-1 font-semibold tracking-wide animate-pulse">
-            ♪ Nadin Amizah
-          </p>
-        )}
-      </div>
 
       {/* ── Side widgets (desktop, only on non-envelope stages) ── */}
       {stage !== 'envelope' && (
